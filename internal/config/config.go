@@ -7,7 +7,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config — структура настроек. Живёт в пакете config, не нужно никуда выносить.
 type Config struct {
 	DBHost     string
 	DBPort     string
@@ -20,9 +19,9 @@ type Config struct {
 }
 
 func Load() *Config {
-	// Теперь видим ошибку, если .env не найден
+	// если файл .env нет вывод ошибки 
 	if err := godotenv.Load(); err != nil {
-		log.Println("⚠️  .env не найден:", err)
+		log.Println(".env не найден:", err)
 	}
 
 	return &Config{

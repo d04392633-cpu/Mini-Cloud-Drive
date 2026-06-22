@@ -6,6 +6,8 @@ import (
 	"mydrive/internal/config"
 	"mydrive/internal/pkg/db"
 
+	"mydrive/internal/repository"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,10 +20,14 @@ func main() {
 	}
 	defer dbPool.Close()
 
-	h := handlers.NewHandler(dbPool)
+	userRepo := repository.NewUserRepository(dbPool)
+	authHandler := handlers.NewAuthHandler(userRepo)
+
+	health := handlers.NewHandler(dbPool)
 
 	e := echo.New()
-	e.GET("/health", h.HealthCheck)
+	e.GET("/health", health.HealthCheck)
+	e.POST("/register", authHandler.Register)
 
-	e.Start(cfg.ServerPort)
+	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }
