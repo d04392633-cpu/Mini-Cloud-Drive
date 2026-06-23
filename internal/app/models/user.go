@@ -36,9 +36,9 @@ type RegisterRequest struct {
 type File struct {
 	ID           int       `json:"id"`
 	UserID       int       `json:"user_id"`
-	Filename     string    `json:"filename"`      // имя на диске (UUID)
-	OriginalName string    `json:"original_name"` // имя от пользователя
+	Filename     string    `json:"filename"`     
+	OriginalName string    `json:"original_name"`
 	Size         int64     `json:"size"`
-	UploadPath   string    `json:"-"` // путь на диске, не отдаём в API
+	UploadPath   string    `json:"-"`
 	CreatedAt    time.Time `json:"created_at"`
 }
