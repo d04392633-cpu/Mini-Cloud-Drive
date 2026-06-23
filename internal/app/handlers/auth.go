@@ -1,19 +1,32 @@
 package handlers
 
 import (
+
 	"mydrive/internal/repository"
 	"net/http"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthHandler struct {
-	Users *repository.UserRepository
+type LoginRequest struct {
+    Email    string `json:"email"`
+    Password string `json:"password"`
 }
 
-func NewAuthHandler(user *repository.UserRepository) *AuthHandler {
-	return &AuthHandler{Users: user}
+type AuthHandler struct {
+	Users     *repository.UserRepository
+	JWTSecret string
+}
+
+
+func NewAuthHandler(users *repository.UserRepository, jwtSecret string) *AuthHandler {
+	return &AuthHandler{
+		Users:     users,
+		JWTSecret: jwtSecret,
+	}
 }
 
 type RegisterRequest struct {
@@ -36,6 +49,9 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	}
 
 	id, err := h.Users.CreateUser(req.Email, string(heshPassword))
+	if id == 0 {
+		return c.JSON(http.StatusConflict, map[string]string{"error":"registered email"})
+	}
 	if err != nil {
 		return c.JSON(http.StatusConflict, map[string]string{"error":"email is already taken"})
 	}
@@ -44,4 +60,36 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		"id":id,
 		"email": req.Email,
 	})
-}	       
+}	
+
+func (h *AuthHandler) Login(c echo.Context) error {
+
+	var req  LoginRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "неверный формат JSON",
+		})
+	}
+
+	id , password_hash , err := h.Users.GetUserByEmail(req.Email)
+	err = bcrypt.CompareHashAndPassword([]byte(password_hash), []byte(req.Password))
+	if err != nil {
+		return c.JSON(401, map[string]string{"error":"Incorrect email or password"})
+	}
+
+	claims := jwt.MapClaims{
+		"user_id": id,                                  
+		"email":   req.Email,                      
+		"exp":     time.Now().Add(24 * time.Hour).Unix(), 
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(h.JWTSecret))
+	
+	if err != nil {
+		return c.JSON(500, map[string]string{"error":"Failed to create JWT token"})
+	}
+
+	return c.JSON(200, map[string]string{"token":tokenString})
+}
