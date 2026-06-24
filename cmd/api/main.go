@@ -4,6 +4,7 @@ import (
 	"log"
 	"mydrive/internal/app/handlers"
 	"mydrive/internal/config"
+	"mydrive/internal/middleware"
 	"mydrive/internal/pkg/db"
 
 	"mydrive/internal/repository"
@@ -29,6 +30,15 @@ func main() {
 	e.GET("/health", health.HealthCheck)
 	e.POST("/register", authHandler.Register)
 	e.POST("/login", authHandler.Login)
+	e.GET("/me", func(c echo.Context) error {
+		// Читаем стикер, который положил middleware
+		userID := c.Get("user_id")
+		return c.JSON(200, map[string]interface{}{
+			"message":  "ты авторизован",
+			"user_id":  userID,
+		})
+	}, middleware.JWTMiddleware(cfg.JWTSecret))
+
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }

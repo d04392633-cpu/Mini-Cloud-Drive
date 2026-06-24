@@ -18,8 +18,6 @@ func New(cfg *config.Config) (*pgxpool.Pool, error) {
 		cfg.DBName,
 	)
 
-	fmt.Println("DSN:", dsn)
-
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, err
