@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io"
+	"log"
 	"mydrive/internal/repository"
 	"net/http"
 	"os"
@@ -70,4 +71,16 @@ func (h *FileHendler) Upload(c echo.Context) error {
 		"fileName": diskName,
 		"size":     size,
 	})
+}
+func (h *FileHendler) FileList(c echo.Context) error {
+	userID := c.Get("user_id").(float64)
+
+	file, err := h.Files.GetFileByUserID(int(userID))
+
+	if err != nil {
+		log.Printf("error getFileById: %v", err)
+		return c.JSON(400, map[string]string{"error": "не удалось получить список"})
+
+	}
+	return c.JSON(200, file)
 }

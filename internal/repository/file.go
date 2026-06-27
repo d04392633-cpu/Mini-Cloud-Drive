@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log"
+	"mydrive/internal/app/models"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -33,3 +34,36 @@ func (r *FileRepository) CreateFile(userID int, diskName, originalName string, s
 
 	return id, err
 }
+
+func (r *FileRepository) GetFileByUserID(user_id int) ([]models.File, error) {
+	rows, err := r.DB.Query(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at from files where user_id = $1 order by created_at desc", user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var file []models.File
+
+	for rows.Next() {
+		var f models.File
+		err := rows.Scan(
+			&f.ID,
+			&f.UserID,
+			&f.Filename,
+			&f.OriginalName,
+			&f.Size,
+			&f.UploadPath,
+			&f.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		file = append(file, f)
+	}
+
+	return file, nil
+}
+

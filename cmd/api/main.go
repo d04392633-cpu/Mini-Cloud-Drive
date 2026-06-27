@@ -33,8 +33,8 @@ func main() {
 	e.GET("/me", func(c echo.Context) error {
 		userID := c.Get("user_id")
 		return c.JSON(200, map[string]interface{}{
-			"message":  "ты авторизован",
-			"user_id":  userID,
+			"message": "ты авторизован",
+			"user_id": userID,
 		})
 	}, middleware.JWTMiddleware(cfg.JWTSecret))
 
@@ -42,7 +42,7 @@ func main() {
 	fileHandler := handlers.NewFileHendler(fileRepo)
 
 	e.POST("/files", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
-
+	e.GET("/MyFiles", fileHandler.FileList, middleware.JWTMiddleware(cfg.JWTSecret))
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }
