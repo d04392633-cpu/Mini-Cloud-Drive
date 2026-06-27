@@ -35,7 +35,7 @@ func (r *FileRepository) CreateFile(userID int, diskName, originalName string, s
 	return id, err
 }
 
-func (r *FileRepository) GetFileByUserID(user_id int) ([]models.File, error) {
+func (r *FileRepository) GetAllFilesByUserID(user_id int) ([]models.File, error) {
 	rows, err := r.DB.Query(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at from files where user_id = $1 order by created_at desc", user_id)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (r *FileRepository) GetFileByUserID(user_id int) ([]models.File, error) {
 		err := rows.Scan(
 			&f.ID,
 			&f.UserID,
-			&f.Filename,
+			&f.FileName,
 			&f.OriginalName,
 			&f.Size,
 			&f.UploadPath,
@@ -67,3 +67,20 @@ func (r *FileRepository) GetFileByUserID(user_id int) ([]models.File, error) {
 	return file, nil
 }
 
+func (r *FileRepository) GetFileById(file_ID int) (*models.File, error) {
+	var file models.File
+	err := r.DB.QueryRow(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at from files where id = $1 ", file_ID).Scan(
+		&file.ID,
+		&file.UserID,
+		&file.FileName,
+		&file.OriginalName,
+		&file.Size,
+		&file.UploadPath,
+		&file.CreatedAt,
+	)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &file, nil
+}

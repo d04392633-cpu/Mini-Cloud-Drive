@@ -41,8 +41,9 @@ func main() {
 	fileRepo := repository.NewFileRepository(dbPool)
 	fileHandler := handlers.NewFileHendler(fileRepo)
 
-	e.POST("/files", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.POST("/AddFiles", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/MyFiles", fileHandler.FileList, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }

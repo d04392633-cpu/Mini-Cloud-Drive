@@ -35,7 +35,7 @@ type RegisterRequest struct {
 type File struct {
 	ID           int       `json:"id"`
 	UserID       int       `json:"user_id"`
-	Filename     string    `json:"filename"`
+	FileName     string    `json:"filename"`
 	OriginalName string    `json:"original_name"`
 	Size         int64     `json:"size"`
 	UploadPath   string    `json:"-"`

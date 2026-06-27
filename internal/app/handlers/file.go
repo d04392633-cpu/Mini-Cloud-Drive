@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -75,7 +76,7 @@ func (h *FileHendler) Upload(c echo.Context) error {
 func (h *FileHendler) FileList(c echo.Context) error {
 	userID := c.Get("user_id").(float64)
 
-	file, err := h.Files.GetFileByUserID(int(userID))
+	file, err := h.Files.GetAllFilesByUserID(int(userID))
 
 	if err != nil {
 		log.Printf("error getFileById: %v", err)
@@ -83,4 +84,23 @@ func (h *FileHendler) FileList(c echo.Context) error {
 
 	}
 	return c.JSON(200, file)
+}
+
+func (h *FileHendler) Download(c echo.Context) error {
+	userID := int(c.Get("user_id").(float64))
+
+	idString := c.Param("id")
+	fileID, err := strconv.Atoi(idString)
+	if err != nil {
+		return c.JSON(401, map[string]string{"error": "неверный ID"})
+	}
+
+	file, err := h.Files.GetFileById(fileID)
+
+	if file.UserID != userID {
+		return c.JSON(400, map[string]string{
+			"error": "нет доступа",
+		})
+	}
+	return c.Attachment(file.UploadPath, file.OriginalName)
 }
