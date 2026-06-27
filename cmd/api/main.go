@@ -44,6 +44,7 @@ func main() {
 	e.POST("/AddFiles", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/MyFiles", fileHandler.FileList, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.DELETE("delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }

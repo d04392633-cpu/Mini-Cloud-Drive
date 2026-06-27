@@ -104,3 +104,37 @@ func (h *FileHendler) Download(c echo.Context) error {
 	}
 	return c.Attachment(file.UploadPath, file.OriginalName)
 }
+
+func (h *FileHendler) DeleteFile(c echo.Context) error {
+	user_id := int(c.Get("user_id").(float64))
+
+	idString := c.Param("id")
+	fileID, err := strconv.Atoi(idString)
+	if err != nil {
+		return c.JSON(401, map[string]string{"error": "неверный ID"})
+	}
+
+	file, err :=h.Files.GetFileById(fileID)
+	if err != nil{
+		return c.JSON(404, map[string]string{
+			"error":"файл не найден",
+		})}
+
+	if file.UserID != user_id {
+		return c.JSON(400, map[string]string{"error":"файл не принадлежит вам"})
+	}
+
+	err = os.Remove(file.UploadPath)
+	if err != nil {
+		log.Printf("ошибка удаления файло локально: %v", err)
+	}
+	err = h.Files.DeleteFileByID(fileID)
+	if err != nil {
+		return c.JSON(500, map[string]string{
+			"error":"не удалось удалить файл",
+		})
+	}
+	return c.JSON(200, map[string]string{
+		"massege":"файл успешно удален",
+	})
+}

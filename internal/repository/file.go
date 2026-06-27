@@ -84,3 +84,13 @@ func (r *FileRepository) GetFileById(file_ID int) (*models.File, error) {
 	}
 	return &file, nil
 }
+
+func (r *FileRepository) DeleteFileByID(file_ID int) error {
+	_,err := r.DB.Exec(context.Background(), "delete from files where id = $1", file_ID)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
