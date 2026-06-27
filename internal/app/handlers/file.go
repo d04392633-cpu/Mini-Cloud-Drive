@@ -1,0 +1,73 @@
+package handlers
+
+import (
+	"io"
+	"mydrive/internal/repository"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
+)
+
+type FileHendler struct {
+	Files *repository.FileRepository
+}
+
+func NewFileHendler(file *repository.FileRepository) FileHendler {
+	return FileHendler{Files: file}
+}
+
+func (h *FileHendler) Upload(c echo.Context) error {
+	userID := c.Get("user_id").(float64)
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "No file in the 'file' field.",
+		})
+	}
+
+	src, err := file.Open()
+
+	if err != nil {
+		return err
+	}
+
+	defer src.Close()
+
+	ext := filepath.Ext(file.Filename) // .jpg, .pdf
+	diskName := uuid.New().String() + ext
+	diskPath := filepath.Join("uploads", diskName)
+
+	os.MkdirAll("uploads", os.ModePerm)
+
+	dst, err := os.Create(diskPath)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "не удалось создать файл",
+		})
+	}
+	defer dst.Close()
+
+	size, err := io.Copy(dst, src)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "не удалось скопировать файл",
+		})
+	}
+
+	id, err := h.Files.CreateFile(int(userID), diskName, file.Filename, size, diskPath)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "не удалось сохранить в DB",
+		})
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"id":       id,
+		"fileName": diskName,
+		"size":     size,
+	})
+}

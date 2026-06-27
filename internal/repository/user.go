@@ -8,11 +8,11 @@ import (
 )
 
 type UserRepository struct {
-    DB *pgxpool.Pool
+	DB *pgxpool.Pool
 }
 
 func NewUserRepository(db *pgxpool.Pool) *UserRepository {
-	return  &UserRepository{DB: db}
+	return &UserRepository{DB: db}
 }
 
 func (r *UserRepository) userExists(email string) (bool, error) {
@@ -31,7 +31,7 @@ func (r *UserRepository) userExists(email string) (bool, error) {
 	return exists, err
 }
 
-func (r *UserRepository) CreateUser(email, passwordHash string) (int, error){
+func (r *UserRepository) CreateUser(email, passwordHash string) (int, error) {
 	var id int
 
 	exists, err := r.userExists(email)
@@ -58,12 +58,12 @@ func (r *UserRepository) CreateUser(email, passwordHash string) (int, error){
 	return id, err
 }
 
-func (r *UserRepository) GetUserByEmail(email string) ( int,  string, error) {
+func (r *UserRepository) GetUserByEmail(email string) (int, string, error) {
 
 	var id int
-	var passwordHash string  
+	var passwordHash string
 
-	err :=  r.DB.QueryRow(context.Background(), "SELECT id, password_hash FROM users WHERE email = $1", email).Scan(&id, &passwordHash)
+	err := r.DB.QueryRow(context.Background(), "SELECT id, password_hash FROM users WHERE email = $1", email).Scan(&id, &passwordHash)
 
 	return id, passwordHash, err
 }

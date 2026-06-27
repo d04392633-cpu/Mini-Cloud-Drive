@@ -19,7 +19,6 @@ type Config struct {
 }
 
 func Load() *Config {
-	// если файл .env нет вывод ошибки 
 	if err := godotenv.Load(); err != nil {
 		log.Println(".env не найден:", err)
 	}
