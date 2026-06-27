@@ -52,9 +52,6 @@ mydrive/
 │       └── file.go
 │
 ├── uploads/                 # Хранилище файлов на диске (не в Git!)
-├── migrations/              # SQL-файлы схемы БД (документация)
-│   ├── 001_create_users_table.sql
-│   └── 002_create_files_table.sql
 │
 ├── .env                     # Переменные окружения (не в Git!)
 ├── .env.example             # Шаблон для новых разработчиков
