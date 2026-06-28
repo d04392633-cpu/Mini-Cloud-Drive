@@ -1,0 +1,6 @@
+{
+  "name": "Mini Cloud Drive",
+  "description": "A minimalist and fully functional web client for managing files in Mini Cloud Drive.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

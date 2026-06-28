@@ -9,6 +9,7 @@ import (
 	"mydrive/internal/repository"
 
 	"github.com/labstack/echo/v4"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 func Run(){
@@ -26,6 +27,7 @@ func Run(){
 	health := handlers.NewHandler(dbPool)
 
 	e := echo.New()
+	e.Use(echoMiddleware.CORS())
 	e.GET("/health", health.HealthCheck)
 	e.POST("/register", authHandler.Register)
 	e.POST("/login", authHandler.Login)
@@ -43,7 +45,7 @@ func Run(){
 	e.POST("/AddFiles", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/MyFiles", fileHandler.FileList, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
-	e.DELETE("delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.DELETE("/delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }
