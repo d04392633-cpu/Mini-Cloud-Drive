@@ -52,9 +52,6 @@ mydrive/
 │       └── file.go
 │
 ├── uploads/                 # Хранилище файлов на диске (не в Git!)
-├── migrations/              # SQL-файлы схемы БД (документация)
-│   ├── 001_create_users_table.sql
-│   └── 002_create_files_table.sql
 │
 ├── .env                     # Переменные окружения (не в Git!)
 ├── .env.example             # Шаблон для новых разработчиков
@@ -361,72 +358,11 @@ curl http://localhost:8080/files \
                                          (stateless)            (repository)
 ```
 
-**Поток загрузки файла:**
-1. Клиент `POST /files` с `Authorization: Bearer ...` и `multipart/form-data`.
-2. `JWTMiddleware` проверяет токен → кладёт `user_id` в контекст.
-3. `FileHandler.Upload` читает файл из формы, генерирует UUID-имя.
-4. Сохраняет на диск в `./uploads/9b1c32d8...`.
-5. `FileRepository.CreateFile` записывает метаданные в PostgreSQL.
-6. Возвращает JSON с `id` и `filename`.
-
----
-
-## 📝 История Git-коммитов (развитие проекта)
-
-```bash
-git log --oneline
-# feat: init project structure and database connection
-# feat: add database migrations and models
-# feat: add user registration with bcrypt
-# feat: add user login and JWT token
-# feat: add JWT middleware for protected routes
-# feat: add file upload with disk storage and DB metadata
-# feat: add file list, download and delete endpoints
-```
-
----
-
-## 🔮 Планируемые улучшения (Roadmap)
-
-- [ ] **Фронтенд** (React + Vite): формы логина/регистрации, drag-and-drop загрузка, таблица файлов.
-- [ ] **Валидация email** и пароля (длина, формат).
-- [ ] **Graceful shutdown** — корректное завершение соединений при остановке сервера.
-- [ ] **Лимит размера файла** (например, 10 MB).
-- [ ] **Логирование** (middleware для логов запросов).
-- [ ] **Пагинация** в списке файлов (`?page=1&limit=20`).
-- [ ] **Подтверждение email** при регистрации (код через SMTP).
-- [ ] **Папки / директории** для организации файлов.
-- [ ] **Доступ по ссылке** (public sharing).
-- [ ] **Тесты** (unit + integration).
-
----
-
-## 🧠 Что изучено в процессе
-
-1. **Go project-layout** — структура enterprise-проектов.
-2. **pgxpool** — пул соединений PostgreSQL (переиспользование TCP-соединений).
-3. **Dependency Injection** — передача зависимостей (DB → Repository → Handler) через конструкторы.
-4. **bcrypt** — хеширование паролей с солью (не хранить в открытом виде).
-5. **JWT** — stateless аутентификация без сессий в БД.
-6. **Echo Middleware** — перехватчики запросов до handler.
-7. **Multipart/form-data** — загрузка файлов через HTTP.
-8. **Context** в Go — проброс данных через слои приложения.
-9. **UUID** — уникальные имена файлов для защиты от коллизий.
-10. **Безопасность:** проверка владельца при скачивании/удалении (403).
-
----
-
-## 📄 Лицензия
-
-MIT — свободно используйте для учёбы и развития.
-
 ---
 
 ## 👤 Автор
 
 **Daler Samadov** — Junior Go Backend Developer, Душанбе, Таджикистан.
-
-Самоучка, изучающий Go через практические проекты. Это финальный проект для портфолио.
 
 ---
 
