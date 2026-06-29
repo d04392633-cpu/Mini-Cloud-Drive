@@ -4,6 +4,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 export const RegisterPage: React.FC = () => {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,6 +20,11 @@ export const RegisterPage: React.FC = () => {
     setSuccess('');
 
     // Front-end validation
+    if (!fullName.trim()) {
+      setError('Имя обязательно для заполнения');
+      return;
+    }
+
     if (!email.includes('@')) {
       setError('Некорректный email адрес');
       return;
@@ -38,7 +44,7 @@ export const RegisterPage: React.FC = () => {
 
     try {
       // POST http://localhost:8080/register
-      await api.post('/register', { email, password });
+      await api.post('/register', { full_name: fullName, email, password });
       
       setSuccess('Регистрация успешна! Вход в систему...');
 
@@ -71,12 +77,24 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-card" id="register-card">
         <div className="auth-logo">☁️</div>
         <h1 className="auth-title">Регистрация</h1>
-        <p className="auth-subtitle font-sans text-xs">Создайте новый аккаунт Mini Cloud Drive</p>
+        <p className="auth-subtitle">Создайте новый аккаунт Mini Cloud Drive</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="fullName">Полное имя</label>
+            <input
+              id="fullName"
+              type="text"
+              placeholder="Иван Иванов"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

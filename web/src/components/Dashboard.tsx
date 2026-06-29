@@ -1,7 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Sidebar } from './Sidebar';
+import { MobileHeader } from './MobileHeader';
+import { FileUpload } from './FileUpload';
 import api from '../api/axios';
-import { LogOut, Upload, Download, Trash2, File, HardDrive, RefreshCw } from 'lucide-react';
+import { File, RefreshCw } from 'lucide-react';
 
 interface FileItem {
   id: number;
@@ -16,15 +19,11 @@ export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [actionType, setActionType] = useState<'download' | 'delete' | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch all files
   const fetchFiles = async () => {
@@ -39,7 +38,11 @@ export const Dashboard: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.error || err.message || 'Не удалось загрузить список файлов');
+      if (err.response?.status === 401) {
+        logout();
+      } else {
+        setError(err.response?.data?.error || err.message || 'Не удалось загрузить список файлов');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,58 +51,6 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchFiles();
   }, []);
-
-  // Handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  // Upload file
-  const handleUploadSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!selectedFile) return;
-
-    setUploading(true);
-    setError('');
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    try {
-      await api.post('/AddFiles', formData);
-      setSelectedFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      await fetchFiles();
-    } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.error || err.message || 'Ошибка загрузки файла');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // Drag and drop handlers
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0]);
-    }
-  };
 
   // Download file
   const handleDownload = async (file: FileItem) => {
@@ -131,14 +82,18 @@ export const Dashboard: React.FC = () => {
 
   // Delete file
   const handleDelete = async (file: FileItem) => {
-    if (!window.confirm(`Удалить файл "${file.original_name}"?`)) {
+    const backendMessage = "Удалить файл";
+    if (!window.confirm(`${backendMessage} "${file.original_name}"?`)) {
       return;
     }
 
     setActionLoadingId(file.id);
     setActionType('delete');
     try {
-      await api.delete(`/delete/${file.id}`);
+      const response = await api.delete(`/delete/${file.id}`);
+      // Backend returns field massege with typo
+      const deleteMsg = response.data?.massege || response.data?.message || 'Файл успешно удален';
+      console.log('Delete response:', deleteMsg);
       await fetchFiles();
     } catch (err: any) {
       console.error(err);
@@ -181,47 +136,23 @@ export const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="dashboard-layout" onDragEnter={handleDrag} onDragOver={handleDrag}>
-      {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <HardDrive style={{ width: 18, height: 18, color: 'white' }} />
-          </div>
-          <span className="sidebar-title">Mini Cloud</span>
-        </div>
-        
-        <nav className="sidebar-nav">
-          <div className="sidebar-link active">
-            <File className="sidebar-link-icon" />
-            <span>My Files</span>
-          </div>
-          <div className="sidebar-link" onClick={fetchFiles} style={{ cursor: 'pointer' }}>
-            <RefreshCw className="sidebar-link-icon" />
-            <span>Recent</span>
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="storage-widget">
-            <div className="storage-header">
-              <span>Хранилище</span>
-              <span>{files.length > 0 ? `${files.length} шт.` : 'Пусто'}</span>
-            </div>
-            <div className="storage-bar-bg">
-              <div className="storage-bar-fill" style={{ width: files.length > 0 ? `${Math.min(files.length * 10, 100)}%` : '0%' }}></div>
-            </div>
-            <button className="btn-upgrade" onClick={() => alert('Учебный проект "Mini Cloud Drive" — все функции бесплатны!')}>
-              Тариф: Учебный
-            </button>
-          </div>
-        </div>
-      </aside>
+    <div className="dashboard-layout" id="dashboard-page-layout">
+      {/* Sidebar - responsive */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content Area */}
       <div className="main-wrapper">
-        {/* Header */}
-        <header className="header-navbar">
+        {/* Mobile Header Bar */}
+        <MobileHeader onMenuToggle={() => setSidebarOpen(true)} title="Мои файлы" />
+
+        {/* Desktop Header */}
+        <header className="header-navbar desktop-only-header">
+          <div className="breadcrumb-zone">
+            <span className="breadcrumb-item">Главная</span>
+            <span className="breadcrumb-separator">/</span>
+            <span className="breadcrumb-item active">Мои файлы</span>
+          </div>
+
           <div className="search-container">
             <span className="search-icon">🔍</span>
             <input 
@@ -236,11 +167,11 @@ export const Dashboard: React.FC = () => {
           <div className="user-profile-zone">
             <div className="profile-info">
               <div className="user-meta">
-                <div className="user-display-name">{user ? user.email.split('@')[0] : 'Пользователь'}</div>
-                <div className="user-role-tag">ID: {user?.id || '1024'}</div>
+                <div className="user-display-name">{user?.full_name || user?.email?.split('@')[0]}</div>
+                <div className="user-role-tag">{user?.email}</div>
               </div>
               <div className="avatar">
-                {user ? user.email.charAt(0).toUpperCase() : 'U'}
+                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'U')}
               </div>
             </div>
             <button onClick={logout} className="btn-header-logout" title="Выйти из системы">
@@ -250,86 +181,43 @@ export const Dashboard: React.FC = () => {
         </header>
 
         {/* Page Body */}
-        <div 
-          className={`dashboard-content-area ${dragActive ? 'drag-over-active' : ''}`}
-          onDragLeave={handleDrag}
-          onDrop={handleDrop}
-        >
+        <main className="dashboard-content-area" id="dashboard-main-content">
           <div className="page-title-row">
-            <h1>Мой Диск</h1>
-            <div className="action-buttons-group">
-              <label htmlFor="dashboard-file-input" className="btn-select-file-label">
-                <Upload />
-                <span>Выбрать файл</span>
-                <input 
-                  type="file" 
-                  id="dashboard-file-input" 
-                  style={{ display: 'none' }} 
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-              </label>
-              <button 
-                onClick={() => handleUploadSubmit()} 
-                disabled={!selectedFile || uploading} 
-                className="btn-upload-solid"
-              >
-                {uploading ? 'Загрузка...' : 'Загрузить файл'}
-              </button>
+            <h1>Мои файлы</h1>
+            <div className="mobile-search-bar">
+              <span className="search-icon">🔍</span>
+              <input 
+                type="text" 
+                placeholder="Поиск файлов..." 
+                className="search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* Banner showing selected file ready to upload */}
-          {selectedFile && (
-            <div className="selected-file-banner">
-              <div className="selected-file-banner-info">
-                <File className="banner-file-icon" />
-                <span className="banner-text">
-                  Готов к загрузке: <strong>{selectedFile.name}</strong>
-                  <span className="banner-text-size">({formatSize(selectedFile.size)})</span>
-                </span>
-              </div>
-              <div className="banner-actions">
-                <button 
-                  onClick={() => handleUploadSubmit()} 
-                  disabled={uploading} 
-                  className="btn-banner-action btn-banner-upload"
-                >
-                  {uploading ? 'Загрузка...' : 'Загрузить'}
-                </button>
-                <button 
-                  onClick={() => {
-                    setSelectedFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = '';
-                  }} 
-                  disabled={uploading}
-                  className="btn-banner-action btn-banner-cancel"
-                >
-                  Отмена
-                </button>
-              </div>
-            </div>
-          )}
+          {/* New Drag and Drop FileUpload component */}
+          <FileUpload onUploadSuccess={fetchFiles} />
 
-          {error && <div className="error-message-panel">{error}</div>}
+          {error && <div className="error-message-panel" id="dashboard-error-panel">{error}</div>}
 
-          {/* Elegant File Table Card */}
-          <div className="table-card">
+          {/* File Storage list representation (Table on Desktop, Cards on Mobile) */}
+          <div className="table-card" id="files-list-container">
             <div className="table-card-header">
               <span className="table-card-title">Файлы ({filteredFiles.length})</span>
-              <button onClick={fetchFiles} className="btn-refresh" title="Обновить" disabled={loading}>
+              <button onClick={fetchFiles} className="btn-refresh" title="Обновить" disabled={loading} id="btn-refresh-files">
                 <RefreshCw className={`refresh-icon ${loading ? 'spin' : ''}`} style={{ width: 14, height: 14 }} />
               </button>
             </div>
 
             <div className="table-responsive-wrapper">
               {loading && files.length === 0 ? (
-                <div className="panel-loading-state">
+                <div className="panel-loading-state" id="files-loading-indicator">
                   <RefreshCw className="spin" style={{ width: 24, height: 24, marginBottom: 12, color: 'var(--color-primary)' }} />
                   <span>Загрузка файлов...</span>
                 </div>
               ) : filteredFiles.length === 0 ? (
-                <div className="panel-empty-state">
+                <div className="panel-empty-state" id="files-empty-state">
                   <div className="panel-empty-icon-box">
                     <File className="panel-empty-icon" />
                   </div>
@@ -337,22 +225,78 @@ export const Dashboard: React.FC = () => {
                   {searchQuery ? (
                     <p>По запросу "{searchQuery}" ничего не найдено</p>
                   ) : (
-                    <p>Загрузите свой первый файл с помощью кнопки "Выбрать файл" или перетащите его прямо на эту область</p>
+                    <p>Перетащите файл в область выше или нажмите для выбора, чтобы начать загрузку</p>
                   )}
                 </div>
               ) : (
-                <table className="geometric-table">
-                  <thead>
-                    <tr>
-                      <th>Оригинальное имя</th>
-                      <th>Размер</th>
-                      <th>Дата загрузки</th>
-                      <th className="text-right">Действия</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Desktop Table View */}
+                  <table className="geometric-table desktop-table-only" id="files-desktop-table">
+                    <thead>
+                      <tr>
+                        <th>Имя файла</th>
+                        <th>Размер</th>
+                        <th>Дата загрузки</th>
+                        <th style={{ textAlign: 'right' }}>Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredFiles.map((file) => {
+                        const ext = file.original_name.split('.').pop()?.toLowerCase();
+                        let colorClass = 'blue';
+                        if (ext === 'pdf') colorClass = 'red';
+                        else if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif') colorClass = 'green';
+                        else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') colorClass = 'amber';
+
+                        return (
+                          <tr key={file.id}>
+                            <td>
+                              <div className="file-cell">
+                                <div className={`file-cell-icon-box ${colorClass}`}>
+                                  <File style={{ width: 18, height: 18 }} />
+                                </div>
+                                <span className="file-cell-name" title={file.original_name}>
+                                  {file.original_name}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="file-cell-size" title={`${file.size} байт`}>
+                                {formatSize(file.size)}
+                              </span>
+                            </td>
+                            <td>
+                              <span className="file-cell-date">
+                                {formatDate(file.created_at)}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div className="table-actions">
+                                <button 
+                                  onClick={() => handleDownload(file)} 
+                                  disabled={actionLoadingId === file.id}
+                                  className="btn-table-action btn-table-download"
+                                >
+                                  {actionLoadingId === file.id && actionType === 'download' ? 'Загрузка...' : 'Скачать'}
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(file)} 
+                                  disabled={actionLoadingId === file.id}
+                                  className="btn-table-action btn-table-delete"
+                                >
+                                  {actionLoadingId === file.id && actionType === 'delete' ? 'Удаление...' : 'Удалить'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Mobile Cards View */}
+                  <div className="mobile-cards-only" id="files-mobile-cards">
                     {filteredFiles.map((file) => {
-                      // Determine visual color class based on extension
                       const ext = file.original_name.split('.').pop()?.toLowerCase();
                       let colorClass = 'blue';
                       if (ext === 'pdf') colorClass = 'red';
@@ -360,54 +304,47 @@ export const Dashboard: React.FC = () => {
                       else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') colorClass = 'amber';
 
                       return (
-                        <tr key={file.id}>
-                          <td>
-                            <div className="file-cell">
-                              <div className={`file-cell-icon-box ${colorClass}`}>
-                                <File style={{ width: 18, height: 18 }} />
-                              </div>
-                              <span className="file-cell-name" title={file.original_name}>
+                        <div className="mobile-file-card" key={file.id}>
+                          <div className="card-top-info">
+                            <div className={`file-cell-icon-box ${colorClass}`}>
+                              <File style={{ width: 18, height: 18 }} />
+                            </div>
+                            <div className="card-meta-details">
+                              <span className="card-file-name" title={file.original_name}>
                                 {file.original_name}
                               </span>
+                              <div className="card-sub-stats">
+                                <span className="card-file-size">{formatSize(file.size)}</span>
+                                <span className="card-bullet">•</span>
+                                <span className="card-file-date">{formatDate(file.created_at)}</span>
+                              </div>
                             </div>
-                          </td>
-                          <td>
-                            <span className="file-cell-size" title={`${file.size} байт`}>
-                              {formatSize(file.size)}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="file-cell-date">
-                              {formatDate(file.created_at)}
-                            </span>
-                          </td>
-                          <td className="text-right">
-                            <div className="table-actions">
-                              <button 
-                                onClick={() => handleDownload(file)} 
-                                disabled={actionLoadingId === file.id}
-                                className="btn-table-action btn-table-download"
-                              >
-                                {actionLoadingId === file.id && actionType === 'download' ? '...' : 'Скачать'}
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(file)} 
-                                disabled={actionLoadingId === file.id}
-                                className="btn-table-action btn-table-delete"
-                              >
-                                {actionLoadingId === file.id && actionType === 'delete' ? '...' : 'Удалить'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
+                          </div>
+                          <div className="card-action-bar">
+                            <button 
+                              onClick={() => handleDownload(file)} 
+                              disabled={actionLoadingId === file.id}
+                              className="btn-card-action download"
+                            >
+                              {actionLoadingId === file.id && actionType === 'download' ? 'Скачивание...' : 'Скачать'}
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(file)} 
+                              disabled={actionLoadingId === file.id}
+                              className="btn-card-action delete"
+                            >
+                              {actionLoadingId === file.id && actionType === 'delete' ? 'Удаление...' : 'Удалить'}
+                            </button>
+                          </div>
+                        </div>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

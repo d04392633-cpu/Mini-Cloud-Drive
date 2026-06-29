@@ -4,6 +4,8 @@ import api from '../api/axios';
 interface User {
   id: number;
   email: string;
+  full_name?: string;
+  created_at?: string;
 }
 
 interface AuthContextType {
@@ -36,9 +38,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.get('/me');
       if (response.status === 200) {
         const storedEmail = localStorage.getItem('email') || 'user@example.com';
+        const uId = response.data.id || response.data.user_id || 1024;
+        const email = response.data.email || storedEmail;
+        const full_name = response.data.full_name || '';
+        const created_at = response.data.created_at || '';
+        
         setUser({
-          id: response.data.user_id,
-          email: storedEmail,
+          id: uId,
+          email: email,
+          full_name: full_name,
+          created_at: created_at,
         });
         setToken(storedToken);
       } else {
