@@ -39,7 +39,7 @@ func (h *FileHendler) Upload(c echo.Context) error {
 
 	defer src.Close()
 
-	ext := filepath.Ext(file.Filename) // .jpg, .pdf
+	ext := filepath.Ext(file.Filename)
 	diskName := uuid.New().String() + ext
 	diskPath := filepath.Join("uploads", diskName)
 
@@ -114,14 +114,15 @@ func (h *FileHendler) DeleteFile(c echo.Context) error {
 		return c.JSON(401, map[string]string{"error": "неверный ID"})
 	}
 
-	file, err :=h.Files.GetFileById(fileID)
-	if err != nil{
+	file, err := h.Files.GetFileById(fileID)
+	if err != nil {
 		return c.JSON(404, map[string]string{
-			"error":"файл не найден",
-		})}
+			"error": "файл не найден",
+		})
+	}
 
 	if file.UserID != user_id {
-		return c.JSON(400, map[string]string{"error":"файл не принадлежит вам"})
+		return c.JSON(400, map[string]string{"error": "файл не принадлежит вам"})
 	}
 
 	err = os.Remove(file.UploadPath)
@@ -131,10 +132,11 @@ func (h *FileHendler) DeleteFile(c echo.Context) error {
 	err = h.Files.DeleteFileByID(fileID)
 	if err != nil {
 		return c.JSON(500, map[string]string{
-			"error":"не удалось удалить файл",
+			"error": "не удалось удалить файл",
 		})
 	}
 	return c.JSON(200, map[string]string{
-		"massege":"файл успешно удален",
+		"massege": "файл успешно удален",
 	})
 }
+

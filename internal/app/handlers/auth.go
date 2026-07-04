@@ -72,7 +72,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		})
 	}
 
-	id, password_hash, err := h.Users.GetUserByEmail(req.Email)
+	id, password_hash,role,err := h.Users.GetUserByEmail(req.Email)
 	err = bcrypt.CompareHashAndPassword([]byte(password_hash), []byte(req.Password))
 	if err != nil {
 		return c.JSON(401, map[string]string{"error": "Incorrect email or password"})
@@ -81,6 +81,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	claims := jwt.MapClaims{
 		"user_id": id,
 		"email":   req.Email,
+		"role":    role,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 

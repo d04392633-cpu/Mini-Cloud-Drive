@@ -12,7 +12,7 @@ import (
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-func Run(){
+func Run() {
 	cfg := config.Load()
 
 	dbPool, err := db.New(cfg)
@@ -26,6 +26,10 @@ func Run(){
 
 	health := handlers.NewHandler(dbPool)
 
+	fileRepo := repository.NewFileRepository(dbPool)
+	fileHandler := handlers.NewFileHendler(fileRepo)
+	adminHandler := handlers.NewAdminHandler(fileRepo) 
+
 	e := echo.New()
 	e.Use(echoMiddleware.CORS())
 	e.GET("/health", health.HealthCheck)
@@ -33,14 +37,15 @@ func Run(){
 	e.POST("/login", authHandler.Login)
 
 
-	fileRepo := repository.NewFileRepository(dbPool)
-	fileHandler := handlers.NewFileHendler(fileRepo)
-
 	e.GET("/me", authHandler.Me, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.POST("/AddFiles", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/MyFiles", fileHandler.FileList, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.DELETE("/delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.GET("/admin/stats", adminHandler.Stats, 
+    middleware.JWTMiddleware(cfg.JWTSecret),   // сначала проверяем браслет
+    middleware.AdminMiddleware(),              // потом проверяем VIP
+)
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))
 }

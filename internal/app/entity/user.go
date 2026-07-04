@@ -25,7 +25,8 @@ type User struct {
 	Email        string    `json:"email"`
 	PasswordHash string    `json:"-"`
 	CreatedAt    time.Time `json:"created_at"`
-	Full_name     string    `json:"full_name"`
+	Full_name    string    `json:"full_name"`
+	Role         string    `json:"role"`
 }
 
 type RegisterRequest struct {
@@ -41,4 +42,11 @@ type File struct {
 	Size         int64     `json:"size"`
 	UploadPath   string    `json:"-"`
 	CreatedAt    time.Time `json:"created_at"`
+}
+
+type UserFilesStat struct {
+	UserID     int    `json:"user_id"`
+	Email      string `json:"email"`
+	FilesCount int    `json:"files_count"`
+	TotalSize  int64  `json:"total_size"`
 }

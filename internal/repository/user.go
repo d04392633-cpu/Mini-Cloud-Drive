@@ -61,23 +61,25 @@ func (r *UserRepository) CreateUser(ful_name, email, passwordHash string) (int, 
 	return id, err
 }
 
-func (r *UserRepository) GetUserByEmail(email string) (int, string, error) {
+func (r *UserRepository) GetUserByEmail(email string) (int, string, string, error) {
 
 	var id int
 	var passwordHash string
+	var role string
 
-	err := r.DB.QueryRow(context.Background(), "SELECT id, password_hash FROM users WHERE email = $1", email).Scan(&id, &passwordHash)
+	err := r.DB.QueryRow(context.Background(), `SELECT id, password_hash, role FROM users WHERE email = $1`, email).Scan(&id, &passwordHash, &role)
 
-	return id, passwordHash, err
+	return id, passwordHash, role, err
 }
 
 func (r *UserRepository) GetInfoUserInformationByID(user_id int) (*entity.User, error) {
 	var u entity.User
-	err := r.DB.QueryRow(context.Background(), "select id, email, created_at, ful_name from users where id = $1 ", user_id).Scan(
+	err := r.DB.QueryRow(context.Background(), "select id, email, created_at, ful_name, role from users where id = $1 ", user_id).Scan(
 		&u.ID,
 		&u.Email,
 		&u.CreatedAt,
 		&u.Full_name,
+		&u.Role,
 	)
 
 	if err != nil {
