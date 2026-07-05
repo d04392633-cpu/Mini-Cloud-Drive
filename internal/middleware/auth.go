@@ -43,14 +43,12 @@ func JWTMiddleware(secret string) echo.MiddlewareFunc {
 func AdminMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			// Достаём роль с груди (которую положил JWTMiddleware)
 			role, ok := c.Get("user_role").(string)
 			if !ok || role != "admin" {
 				return c.JSON(http.StatusForbidden, map[string]string{
 					"error": "доступ запрещён: требуется роль admin",
 				})
 			}
-			// Роль подходит — пускаем дальше
 			return next(c)
 		}
 	}

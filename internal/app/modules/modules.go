@@ -43,8 +43,8 @@ func Run() {
 	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.DELETE("/delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/admin/stats", adminHandler.Stats, 
-    middleware.JWTMiddleware(cfg.JWTSecret),   // сначала проверяем браслет
-    middleware.AdminMiddleware(),              // потом проверяем VIP
+    middleware.JWTMiddleware(cfg.JWTSecret),  
+    middleware.AdminMiddleware(), 
 )
 
 	e.Logger.Fatal(e.Start(cfg.ServerPort))

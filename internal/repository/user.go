@@ -33,7 +33,7 @@ func (r *UserRepository) userExists(email string) (bool, error) {
 	return exists, err
 }
 
-func (r *UserRepository) CreateUser(ful_name, email, passwordHash string) (int, error) {
+func (r *UserRepository) CreateUser(full_name, email, passwordHash string) (int, error) {
 	var id int
 
 	exists, err := r.userExists(email)
@@ -49,13 +49,13 @@ func (r *UserRepository) CreateUser(ful_name, email, passwordHash string) (int, 
 
 	err = r.DB.QueryRow(
 		context.Background(),
-		`INSERT INTO users (email, password_hash, created_at, ful_name)
+		`INSERT INTO users (email, password_hash, created_at, full_name)
 		 VALUES ($1, $2, $3, $4)
 		 RETURNING id`,
 		email,
 		passwordHash,
 		currentTime,
-		ful_name,
+		full_name,
 	).Scan(&id)
 
 	return id, err
@@ -74,7 +74,7 @@ func (r *UserRepository) GetUserByEmail(email string) (int, string, string, erro
 
 func (r *UserRepository) GetInfoUserInformationByID(user_id int) (*entity.User, error) {
 	var u entity.User
-	err := r.DB.QueryRow(context.Background(), "select id, email, created_at, ful_name, role from users where id = $1 ", user_id).Scan(
+	err := r.DB.QueryRow(context.Background(), "select id, email, created_at, full_name, role from users where id = $1 ", user_id).Scan(
 		&u.ID,
 		&u.Email,
 		&u.CreatedAt,
