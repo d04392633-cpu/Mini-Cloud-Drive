@@ -33,7 +33,7 @@ func (r *UserRepository) userExists(email string) (bool, error) {
 	return exists, err
 }
 
-func (r *UserRepository) CreateUser(full_name, email, passwordHash string) (int, error) {
+func (r *UserRepository) CreateUser(full_name, email, passwordHash,role string) (int, error) {
 	var id int
 
 	exists, err := r.userExists(email)
@@ -57,6 +57,13 @@ func (r *UserRepository) CreateUser(full_name, email, passwordHash string) (int,
 		currentTime,
 		full_name,
 	).Scan(&id)
+
+	if id == 1 {
+		_,err:= r.DB.Exec(context.Background(), `UPDATE users SET role = 'admin' WHERE id = $1`, id)
+		if err != nil {
+			return 0,err
+		}
+	}
 
 	return id, err
 }

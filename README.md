@@ -32,7 +32,7 @@ A simplified file storage backend built with **Go + Echo + PostgreSQL**. Support
 ```
 mydrive/
 ├── cmd/api/
-│   └── main.go              # Точка входа (только wiring + запуск)
+│   └── main.go              # Точка входа
 │
 ├── internal/
 │   ├── config/              # Загрузка .env конфигурации
@@ -65,7 +65,7 @@ mydrive/
 - `handlers/` — принимает HTTP-запросы, валидирует входные данные, формирует ответы.
 - `repository/` — единственное место с SQL-запросами. Независимо от HTTP.
 - `middleware/` — перехватчики запросов (JWT проверка) до попадания в handlers.
-- `models/` — чистые структуры данных, используются во всех слоях.
+- `entity/` — чистые структуры данных, используются во всех слоях.
 
 ---
 
@@ -78,6 +78,7 @@ mydrive/
 | `email` | `VARCHAR(255) UNIQUE NOT NULL` | Email пользователя |
 | `password_hash` | `VARCHAR(255) NOT NULL` | Хеш пароля (bcrypt) |
 | `created_at` | `TIMESTAMP DEFAULT now()` | Дата регистрации |
+| `role`| `VARCHAR(255) NOT NULL` | Роль пользователя |
 
 ### Таблица `files`
 | Поле | Тип | Описание |
@@ -118,7 +119,7 @@ mydrive/
 
 **Тело:**
 ```json
-{"email": "user@example.com", "password": "password123"}
+{"email": "user@example.com", "password": "password123", "full_name":"Name"}
 ```
 
 **Ответ 201 (Created):**

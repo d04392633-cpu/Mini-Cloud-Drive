@@ -47,7 +47,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "password hashing error"})
 	}
 
-	id, err := h.Users.CreateUser(req.FullName, req.Email, string(heshPassword))
+	id, err := h.Users.CreateUser(req.FullName, req.Email, string(heshPassword), "user")
 	if id == 0 {
 		return c.JSON(http.StatusConflict, map[string]string{"error": "registered email"})
 	}

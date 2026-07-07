@@ -28,7 +28,7 @@ func Run() {
 
 	fileRepo := repository.NewFileRepository(dbPool)
 	fileHandler := handlers.NewFileHendler(fileRepo)
-	adminHandler := handlers.NewAdminHandler(fileRepo) 
+	adminHandler := handlers.NewAdminHandler(fileRepo, userRepo) 
 
 	e := echo.New()
 	e.Use(echoMiddleware.CORS())
@@ -43,9 +43,12 @@ func Run() {
 	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.DELETE("/delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/admin/stats", adminHandler.Stats, 
-    middleware.JWTMiddleware(cfg.JWTSecret),  
-    middleware.AdminMiddleware(), 
-)
+    middleware.JWTMiddleware(cfg.JWTSecret),   
+    middleware.AdminMiddleware())  
+	e.POST("/register/admin", adminHandler.RegisterAdmin,
+	middleware.JWTMiddleware(cfg.JWTSecret),
+	middleware.AdminMiddleware())
 
-	e.Logger.Fatal(e.Start(cfg.ServerPort))
+
+	e.Logger.Fatal(e.Start(":"+cfg.ServerPort))
 }

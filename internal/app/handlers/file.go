@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"log"
+	"mydrive/internal/config"
 	"mydrive/internal/repository"
 	"net/http"
 	"os"
@@ -38,12 +39,13 @@ func (h *FileHendler) Upload(c echo.Context) error {
 	}
 
 	defer src.Close()
-
+	
+	cft := config.Load()
 	ext := filepath.Ext(file.Filename)
 	diskName := uuid.New().String() + ext
-	diskPath := filepath.Join("uploads", diskName)
+	diskPath := filepath.Join(cft.UploadDir, diskName)
 
-	os.MkdirAll("uploads", os.ModePerm)
+	os.MkdirAll(cft.UploadDir, os.ModePerm)
 
 	dst, err := os.Create(diskPath)
 	if err != nil {

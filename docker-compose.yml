@@ -1,0 +1,59 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: mini-cloud-db
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydrive
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydrive"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/migrations
+
+
+  app:
+    build: .
+
+    container_name: mini-cloud-api
+
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: mydrive
+
+      SERVER_PORT: 8080
+      JWT_SECRET: my-secret
+      UPLOAD_DIR: uploads
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - uploads:/app/uploads
+
+
+volumes:
+  postgres_data:
+  uploads:
