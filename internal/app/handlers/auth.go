@@ -28,8 +28,8 @@ func NewAuthHandler(users *repository.UserRepository, jwtSecret string) *AuthHan
 }
 
 type RegisterRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" required:"min=8,max=64"`
 	FullName string `json:"full_name"`
 }
 
@@ -39,6 +39,19 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "неверный формат JSON",
+		})
+	}
+
+	err :=repository.ValidateEmail(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusConflict, map[string]string{
+			"error":"email не валиден",
+		})
+	}
+	err = repository.ValidatePassword(req.Password)
+		if err != nil {
+		return c.JSON(http.StatusConflict, map[string]string{
+			"error":"password не валиден",
 		})
 	}
 

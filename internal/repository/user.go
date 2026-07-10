@@ -6,6 +6,7 @@ import (
 	"mydrive/internal/app/entity"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -95,4 +96,17 @@ func (r *UserRepository) GetInfoUserInformationByID(user_id int) (*entity.User, 
 	}
 
 	return &u, nil
+}
+
+func ValidateEmail(email string) (err error) {
+	validate := validator.New()
+
+	return validate.Var(email, "required,email")
+}
+
+
+func ValidatePassword(Passvord string) (err error){
+		validate := validator.New()
+
+	return validate.Var(Passvord, "required,min=8,max=64")
 }
