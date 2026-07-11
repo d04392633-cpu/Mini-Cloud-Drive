@@ -14,6 +14,7 @@ CREATE TABLE files (
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
+    favorite BOOLEAN DEFAULT FALSE,
 
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)

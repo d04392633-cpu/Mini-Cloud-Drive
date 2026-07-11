@@ -36,7 +36,7 @@ func (r *FileRepository) CreateFile(userID int, diskName, originalName string, s
 }
 
 func (r *FileRepository) GetAllFilesByUserID(user_id int) ([]entity.File, error) {
-	rows, err := r.DB.Query(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at from files where user_id = $1 order by created_at desc", user_id)
+	rows, err := r.DB.Query(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at,favorite from files where user_id = $1 order by created_at desc", user_id)
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +55,7 @@ func (r *FileRepository) GetAllFilesByUserID(user_id int) ([]entity.File, error)
 			&f.Size,
 			&f.UploadPath,
 			&f.CreatedAt,
+			&f.Favorite,
 		)
 
 		if err != nil {
@@ -69,7 +70,7 @@ func (r *FileRepository) GetAllFilesByUserID(user_id int) ([]entity.File, error)
 
 func (r *FileRepository) GetFileById(file_ID int) (*entity.File, error) {
 	var file entity.File
-	err := r.DB.QueryRow(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at from files where id = $1 ", file_ID).Scan(
+	err := r.DB.QueryRow(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at,favorite from files where id = $1 ", file_ID).Scan(
 		&file.ID,
 		&file.UserID,
 		&file.FileName,
@@ -77,6 +78,7 @@ func (r *FileRepository) GetFileById(file_ID int) (*entity.File, error) {
 		&file.Size,
 		&file.UploadPath,
 		&file.CreatedAt,
+		&file.Favorite,
 	)
 	if err != nil {
 		log.Println(err)
@@ -95,3 +97,49 @@ func (r *FileRepository) DeleteFileByID(file_ID int) error {
 	return nil
 }
 
+func (r *FileRepository) Is_favorite(file_id int) error{
+	_, err := r.DB.Exec(context.Background(),`
+	UPDATE files 
+	SET favorite = TRUE 
+	WHERE id = $1;`,file_id)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *FileRepository) GetAllFavoriteFilesByUserID(user_id int) ([]entity.File, error) {
+	rows, err := r.DB.Query(context.Background(), "select id, user_id, filename, original_name, size, upload_patch,created_at,favorite from files where user_id = $1 AND favorite = true order by created_at desc", user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var file []entity.File
+
+	for rows.Next() {
+		var f entity.File
+		err := rows.Scan(
+			&f.ID,
+			&f.UserID,
+			&f.FileName,
+			&f.OriginalName,
+			&f.Size,
+			&f.UploadPath,
+			&f.CreatedAt,
+			&f.Favorite,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		file = append(file, f)
+	}
+
+	return file, nil
+}

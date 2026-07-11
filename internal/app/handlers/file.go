@@ -142,3 +142,48 @@ func (h *FileHendler) DeleteFile(c echo.Context) error {
 	})
 }
 
+func (h *FileHendler) FileFavorite(c echo.Context) error {
+	user_id := int(c.Get("user_id").(float64))
+
+	idString := c.Param("id")
+	fileID, err := strconv.Atoi(idString)
+	if err != nil {
+		return c.JSON(401, map[string]string{"error": "неверный ID"})
+	}
+
+	file, err := h.Files.GetFileById(fileID)
+	if err != nil {
+		return c.JSON(404, map[string]string{
+			"error": "файл не найден",
+		})
+	}
+
+	if file.UserID != user_id {
+		return c.JSON(400, map[string]string{"error": "файл не принадлежит вам"})
+	}
+
+	err = h.Files.Is_favorite(fileID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error":"не удалось добавить файл в избранные",
+		})
+	}
+
+	return c.JSON(200, map[string]string{
+		"massege": "файл успешно добавлен в избранные",
+	})
+}
+
+
+func (h *FileHendler) FileFavoriteList(c echo.Context) error {
+	userID := c.Get("user_id").(float64)
+
+	file, err := h.Files.GetAllFavoriteFilesByUserID(int(userID))
+
+	if err != nil {
+		log.Printf("error getFileById: %v", err)
+		return c.JSON(400, map[string]string{"error": "не удалось получить список"})
+
+	}
+	return c.JSON(200, file)
+}

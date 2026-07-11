@@ -42,6 +42,7 @@ type File struct {
 	Size         int64     `json:"size"`
 	UploadPath   string    `json:"-"`
 	CreatedAt    time.Time `json:"created_at"`
+	Favorite     bool      `json:"favorite"`
 }
 
 type UserFilesStat struct {

@@ -40,7 +40,9 @@ func Run() {
 	e.GET("/me", authHandler.Me, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.POST("/AddFiles", fileHandler.Upload, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/MyFiles", fileHandler.FileList, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.GET("/MyFiles/Favorite", fileHandler.FileFavoriteList, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/files/:id/download", fileHandler.Download, middleware.JWTMiddleware(cfg.JWTSecret))
+	e.GET("file/:id/favorite", fileHandler.FileFavorite,middleware.JWTMiddleware(cfg.JWTSecret))
 	e.DELETE("/delete/:id", fileHandler.DeleteFile, middleware.JWTMiddleware(cfg.JWTSecret))
 	e.GET("/admin/stats", adminHandler.Stats, 
     middleware.JWTMiddleware(cfg.JWTSecret),   
