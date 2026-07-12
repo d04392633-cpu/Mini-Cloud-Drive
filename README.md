@@ -1,370 +1,765 @@
-# Mini Cloud Drive ☁️
+# ☁️ Mini Cloud Drive
 
-> Упрощённый аналог Google Drive (backend) — учебный проект на Go с REST API.
+> REST API облачного хранилища файлов, разработанное на Go с использованием PostgreSQL, JWT, Docker и принципов Clean Architecture.
 
----
-
-## 🌐 English Summary
-
-A simplified file storage backend built with **Go + Echo + PostgreSQL**. Supports user registration, JWT authentication, file upload/download/delete with metadata stored in PostgreSQL and files saved on disk.
-
-**Architecture**: Standard `golang-standards/project-layout` structure.
-
----
-
-## 📦 Технологический стек
-
-| Компонент | Технология | Назначение |
-|-----------|-----------|------------|
-| Backend | **Go 1.22+** | Основной язык |
-| HTTP Framework | **Echo v4** | REST API роутинг, middleware, валидация |
-| Database Driver | **pgx (jackc/pgx/v5)** | PostgreSQL драйвер + пул соединений |
-| Auth | **JWT** + **bcrypt** | Stateless аутентификация + хеширование паролей |
-| БД | **PostgreSQL 16** | Хранение пользователей и метаданных файлов |
-| Frontend | **React + Vite** *(планируется)* | Интерфейс пользователя |
+![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker)
+![JWT](https://img.shields.io/badge/JWT-Authentication-orange)
+![Echo](https://img.shields.io/badge/Echo-v4-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## 🏗 Архитектура проекта
+# 📖 О проекте
 
-Проект структурирован по стандарту **[golang-standards/project-layout](https://github.com/golang-standards/project-layout)**:
+**Mini Cloud Drive** — это backend-приложение для хранения файлов, вдохновлённое облачными сервисами вроде Google Drive.
 
-```
-mydrive/
-├── cmd/api/
-│   └── main.go              # Точка входа
+Проект предоставляет REST API для:
+
+- регистрации пользователей;
+- авторизации через JWT;
+- загрузки файлов;
+- скачивания файлов;
+- удаления файлов;
+- работы с избранными файлами;
+- административных функций;
+- безопасного хранения данных пользователей.
+
+Главная цель проекта — изучение разработки backend-приложений на Go, работы с PostgreSQL, Docker, JWT-аутентификацией и организацией кода по принципам Clean Architecture.
+
+---
+
+# ✨ Возможности
+
+## 👤 Пользователи
+
+- Регистрация новых пользователей
+- Авторизация пользователей
+- JWT Authentication
+- bcrypt Hashing
+- Роли пользователей
+
+---
+
+## 📂 Работа с файлами
+
+- Загрузка файлов
+- Скачивание файлов
+- Получение списка файлов
+- Удаление файлов
+- Хранение файлов на диске
+- Хранение метаданных в PostgreSQL
+
+---
+
+## ⭐ Избранные файлы
+
+- Добавление файла в избранное
+- Получение списка избранных файлов
+- Удаление файла из избранного
+
+---
+
+## 🔒 Безопасность
+
+- JWT Middleware
+- Admin Middleware
+- Проверка владельца файла
+- bcrypt для хранения паролей
+
+---
+
+## 🐳 Инфраструктура
+
+- Docker
+- Docker Compose
+- PostgreSQL
+- SQL Migrations
+- Makefile
+- Environment Variables
+
+---
+
+# 🛠 Технологический стек
+
+| Компонент | Технология |
+|------------|------------|
+| Язык программирования | Go |
+| HTTP Framework | Echo v4 |
+| Database | PostgreSQL |
+| Driver | pgx |
+| Authentication | JWT |
+| Password Hashing | bcrypt |
+| Containerization | Docker |
+| Orchestration | Docker Compose |
+| Migrations | golang-migrate |
+| Automation | Makefile |
+
+---
+
+# 🏗 Архитектура проекта
+
+Проект построен с использованием принципов **Clean Architecture**.
+
+```text
+Mini-Cloud-Drive
 │
-├── internal/
-│   ├── config/              # Загрузка .env конфигурации
+├── cmd
+│   └── api
+│       └── main.go
+│
+├── internal
+│   ├── app
+│   │   ├── entity
+│   │   │   └── user.go
+│   │   │
+│   │   ├── handlers
+│   │   │   ├── admin.go
+│   │   │   ├── auth.go
+│   │   │   ├── file.go
+│   │   │   └── handlers.go
+│   │   │
+│   │   └── modules
+│   │       └── modules.go
+│   │
+│   ├── config
 │   │   └── config.go
-│   ├── db/                  # Подключение к PostgreSQL + миграции
-│   │   └── db.go
-│   ├── handlers/            # HTTP обработчики (сло́й контроллеров)
-│   │   ├── handler.go       # Health check
-│   │   ├── auth.go          # Регистрация / вход
-│   │   └── file.go          # Загрузка / список / скачивание / удаление
-│   ├── middleware/          # JWT проверка токенов
+│   │
+│   ├── middleware
 │   │   └── auth.go
-│   ├── models/              # Go-структуры (DTO / entities)
-│   │   └── models.go
-│   └── repository/          # Сло́й доступа к данным (SQL-запросы)
-│       ├── user.go
-│       └── file.go
+│   │
+│   ├── repository
+│   │   ├── admin.go
+│   │   ├── file.go
+│   │   └── user.go
+│   │
+│   └── pkg
+│       └── db
+│           └── db.go
 │
-├── uploads/                 # Хранилище файлов на диске (не в Git!)
+├── migrations
 │
-├── .env                     # Переменные окружения (не в Git!)
-├── .env.example             # Шаблон для новых разработчиков
+├── uploads
+│
+├── Dockerfile
+├── docker-compose.yml
+├── .env
+├── .env.example
 ├── go.mod
-└── README.md                # ← Вы здесь
-```
-
-**Принцип разделения ответственности:**
-
-- `cmd/api/main.go` — только "розетка": создаёт зависимости, соединяет, запускает.
-- `handlers/` — принимает HTTP-запросы, валидирует входные данные, формирует ответы.
-- `repository/` — единственное место с SQL-запросами. Независимо от HTTP.
-- `middleware/` — перехватчики запросов (JWT проверка) до попадания в handlers.
-- `entity/` — чистые структуры данных, используются во всех слоях.
-
----
-
-## 🗄 Схема базы данных
-
-### Таблица `users`
-| Поле | Тип | Описание |
-|------|-----|----------|
-| `id` | `SERIAL PRIMARY KEY` | Уникальный ID |
-| `email` | `VARCHAR(255) UNIQUE NOT NULL` | Email пользователя |
-| `password_hash` | `VARCHAR(255) NOT NULL` | Хеш пароля (bcrypt) |
-| `created_at` | `TIMESTAMP DEFAULT now()` | Дата регистрации |
-| `role`| `VARCHAR(255) NOT NULL` | Роль пользователя |
-
-### Таблица `files`
-| Поле | Тип | Описание |
-|------|-----|----------|
-| `id` | `SERIAL PRIMARY KEY` | Уникальный ID |
-| `user_id` | `INTEGER REFERENCES users(id) ON DELETE CASCADE` | Владелец файла |
-| `filename` | `VARCHAR(255) UNIQUE NOT NULL` | UUID-имя на диске |
-| `original_name` | `VARCHAR(255) NOT NULL` | Оригинальное имя файла |
-| `size` | `BIGINT NOT NULL` | Размер в байтах |
-| `upload_path` | `VARCHAR(500) NOT NULL` | Путь на диске |
-| `created_at` | `TIMESTAMP DEFAULT now()` | Дата загрузки |
-
-**Связь:** `users` (1) → `files` (N). При удалении пользователя каскадно удаляются все его файлы.
-
----
-
-## 🔌 API Endpoints
-
-### Публичные (без авторизации)
-
-#### `GET /health`
-Проверка работоспособности сервера и подключения к БД.
-
-**Ответ 200:**
-```json
-{"status": "ok", "db": "connected"}
-```
-
-**Ответ 500:**
-```json
-{"status": "error", "db": "unreachable"}
+├── go.sum
+└── README.md
 ```
 
 ---
 
-#### `POST /register`
-Регистрация нового пользователя.
+# 📂 Структура проекта
 
-**Тело:**
-```json
-{"email": "user@example.com", "password": "password123", "full_name":"Name"}
-```
+## cmd/api
 
-**Ответ 201 (Created):**
-```json
-{"id": 1, "email": "user@example.com"}
-```
+Точка входа приложения.
 
-**Ответ 400:** неверный JSON.  
-**Ответ 409:** email уже занят.
+Отвечает за:
 
-**Безопасность:** пароль хешируется через `bcrypt` с солью. Не хранится в открытом виде.
+- запуск сервера;
+- подключение конфигурации;
+- подключение базы данных;
+- регистрацию маршрутов;
+- запуск Echo.
 
 ---
 
-#### `POST /login`
-Авторизация. Возвращает JWT-токен.
+## internal/app/entity
 
-**Тело:**
-```json
-{"email": "user@example.com", "password": "password123"}
-```
+Слой моделей приложения.
 
-**Ответ 200:**
-```json
-{"token": "eyJhbGciOiJIUzI1NiIs..."}
-```
+Содержит структуры данных, используемые во всех слоях проекта.
 
-**Ответ 401:** неверный email или пароль (единый ответ для безопасности — не палит существование email).
+Примеры:
+
+- User
+- File
+- Favorite
 
 ---
 
-### Защищённые (требуют `Authorization: Bearer <token>`)
+## internal/app/handlers
 
-#### `POST /files`
-Загрузка файла. `multipart/form-data`.
+Слой обработки HTTP-запросов.
 
-```bash
-curl -X POST http://localhost:8080/files \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@document.pdf"
-```
+Задачи:
 
-**Ответ 201:**
-```json
-{"id": 1, "filename": "9b1c32d8-4c0f.pdf", "size": 482931}
-```
+- обработка запросов;
+- получение данных пользователя;
+- работа с JSON;
+- работа с FormData;
+- возврат ответов клиенту.
 
-**Что происходит:**
-1. Генерируется UUID-имя файла (защита от перезаписи, коллизий имён).
-2. Сохраняется на диск в `./uploads/`.
-3. Метаданные записываются в PostgreSQL с `user_id` текущего пользователя.
+### auth.go
+
+Маршруты:
+
+- регистрация;
+- авторизация.
+
+### file.go
+
+Маршруты:
+
+- загрузка файлов;
+- получение файлов;
+- удаление файлов;
+- скачивание файлов;
+- избранные файлы.
+
+### admin.go
+
+Административные маршруты.
+
+### handlers.go
+
+Регистрация всех обработчиков приложения.
 
 ---
 
-#### `GET /files`
-Список файлов текущего пользователя.
+## internal/app/modules
 
-**Ответ 200:**
+Инициализация зависимостей приложения.
+
+Создаёт:
+
+- Repository;
+- Middleware;
+- Handlers.
+
+---
+
+## internal/config
+
+Загрузка конфигурации из `.env`.
+
+Используется для хранения:
+
+- порта приложения;
+- подключения к PostgreSQL;
+- JWT Secret;
+- других настроек.
+
+---
+
+## internal/middleware
+
+Промежуточный слой обработки запросов.
+
+Используется для:
+
+- проверки JWT;
+- проверки роли пользователя;
+- защиты маршрутов.
+
+---
+
+## internal/repository
+
+Слой доступа к данным.
+
+Содержит все SQL-запросы приложения.
+
+### user.go
+
+Работа с пользователями.
+
+### file.go
+
+Работа с файлами.
+
+### admin.go
+
+Работа с административными функциями.
+
+---
+
+## internal/pkg/db
+
+Пакет подключения к PostgreSQL.
+
+Отвечает за:
+
+- подключение к базе;
+- проверку соединения;
+- создание пула соединений.
+
+---
+
+## migrations
+
+SQL-миграции проекта.
+
+Позволяют:
+
+- создавать таблицы;
+- изменять структуру базы данных;
+- откатывать изменения.
+
+---
+
+## uploads
+
+Локальное хранилище файлов.
+
+Все загружаемые пользователями файлы сохраняются в эту директорию.
+
+---
+
+# 🔄 Как работает приложение
+
+```text
+Client
+   │
+   ▼
+Echo Router
+   │
+   ▼
+Middleware
+   │
+   ▼
+Handler
+   │
+   ▼
+Repository
+   │
+   ▼
+PostgreSQL
+```
+
+---
+
+### Работа с файлами
+
+```text
+User
+ │
+ ▼
+Upload Request
+ │
+ ▼
+Handler
+ │
+ ├──► uploads/
+ │
+ └──► PostgreSQL
+```
+
+Файл сохраняется на диск.
+
+Информация о файле сохраняется в PostgreSQL.
+
+---
+
+# 🗄 База данных
+
+## Таблица users
+
+| Поле | Описание |
+|--------|----------|
+| id | ID пользователя |
+| email | Email |
+| password | Хеш пароля |
+| role | Роль пользователя |
+| created_at | Дата регистрации |
+
+---
+
+## Таблица files
+
+| Поле | Описание |
+|--------|----------|
+| id | ID файла |
+| user_id | Владелец |
+| original_name | Исходное имя |
+| filename | Имя на диске |
+| upload_path | Путь хранения |
+| size | Размер файла |
+| created_at | Дата загрузки |
+
+---
+
+## Связи
+
+```text
+users
+  │
+  └───────► files
+             (1:N)
+```
+
+Один пользователь может иметь множество файлов.
+
+---
+
+# 🔐 Аутентификация
+
+Для аутентификации используется JWT.
+
+После успешного входа пользователь получает токен.
+
+Пример:
+
 ```json
 {
-  "files": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "filename": "9b1c32d8-4c0f.pdf",
-      "original_name": "document.pdf",
-      "size": 482931,
-      "created_at": "2026-06-21T15:34:18Z"
-    }
-  ]
+  "token": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
-Сортировка: новые сверху (`ORDER BY created_at DESC`).
+Токен необходимо передавать в заголовке:
+
+```http
+Authorization: Bearer <TOKEN>
+```
 
 ---
 
-#### `GET /files/:id/download`
-Скачивание файла по ID. Возвращает `Content-Disposition: attachment` с оригинальным именем.
+# 🔒 Middleware
 
-```bash
-curl -O -J http://localhost:8080/files/1/download \
-  -H "Authorization: Bearer <token>"
-```
+## JWT Middleware
 
-**Безопасность:** проверяется владелец файла. Чужой файл → `403 Forbidden`.
+Проверяет:
 
----
+- наличие токена;
+- валидность подписи;
+- срок действия.
 
-#### `DELETE /files/:id`
-Удаление файла. Удаляет с диска и из БД.
+Если токен неверный:
 
-```bash
-curl -X DELETE http://localhost:8080/files/1 \
-  -H "Authorization: Bearer <token>"
-```
-
-**Ответ 200:**
 ```json
-{"message": "файл удалён"}
+{
+  "error": "unauthorized"
+}
 ```
 
-**Безопасность:** проверяется владелец. Чужой файл → `403 Forbidden`.
+Статус:
+
+```http
+401 Unauthorized
+```
 
 ---
 
-## 🔐 Аутентификация и авторизация
+## Admin Middleware
 
-### JWT (JSON Web Token) — Stateless
+Проверяет наличие роли администратора.
 
-- **Протокол:** Bearer token в заголовке `Authorization`.
-- **Алгоритм:** `HS256` (HMAC + SHA256).
-- **Payload:** `user_id`, `email`, `exp` (время истечения).
-- **Секрет:** хранится в `.env` (`JWT_SECRET`).
-- **Жизнь:** 24 часа (по умолчанию, настраивается в коде).
+Если пользователь не является администратором:
 
-**Почему JWT, а не сессии в БД?**
-- Сервер не хранит состояние (stateless) — масштабируемо.
-- Не нужна таблица/Redis сессий.
-- Минимальная нагрузка на сервер.
-
-**Торговля:** отзыв токена невозможен без смены секретного ключа. Для MVP это приемлемо.
-
-### Middleware: проверка токена
-
-Каждый защищённый запрос проходит через `JWTMiddleware`:
-1. Читает `Authorization` заголовок.
-2. Отрезает `Bearer `.
-3. Проверяет подпись через `jwt.Parse`.
-4. Если валиден — кладёт `user_id` в `echo.Context` (стикер для handler).
-5. Если невалиден — `401 Unauthorized`.
+```http
+403 Forbidden
+```
 
 ---
 
-## ⚙️ Переменные окружения
+# 🔌 API Endpoints
 
-Создай файл `.env` в корне проекта (копируй из `.env.example`):
+## Authentication
+
+### Register
+
+```http
+POST /register
+```
+
+Пример запроса:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+---
+
+### Login
+
+```http
+POST /login
+```
+
+Пример запроса:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+Ответ:
+
+```json
+{
+  "token": "jwt-token"
+}
+```
+
+---
+
+# 📂 Files
+
+## Upload File
+
+```http
+POST /files
+```
+
+Тип:
+
+```text
+multipart/form-data
+```
+
+---
+
+## Get Files
+
+```http
+GET /files
+```
+
+---
+
+## Download File
+
+```http
+GET /files/:id
+```
+
+---
+
+## Delete File
+
+```http
+DELETE /files/:id
+```
+
+---
+
+# ⭐ Favorite Files
+
+## Add Favorite
+
+```http
+POST /favorites/:id
+```
+
+---
+
+## Get Favorites
+
+```http
+GET /favorites
+```
+
+---
+
+## Remove Favorite
+
+```http
+DELETE /favorites/:id
+```
+
+---
+
+# 👮 Admin
+
+Административные маршруты доступны только пользователям с ролью Admin.
+
+---
+
+# ⚙️ Переменные окружения
+
+Пример файла `.env`:
 
 ```env
-# PostgreSQL
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=mydrive
-DB_PASSWORD=mydrive123
-DB_NAME=mydrive
-
-# Сервер
 SERVER_PORT=:8080
 
-# JWT (сменить на продакшене!)
-JWT_SECRET=super-secret-key-change-me
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=mydrive
 
-# Хранилище файлов
+JWT_SECRET=super-secret-key
+
 UPLOAD_DIR=./uploads
 ```
 
-> ⚠️ **Файл `.env` не коммитится в Git!** Добавлен в `.gitignore`.
+---
+
+# 🐳 Docker
+
+Сборка контейнеров:
+
+```bash
+docker compose build
+```
+
+Запуск:
+
+```bash
+docker compose up
+```
+
+Запуск в фоне:
+
+```bash
+docker compose up -d
+```
+
+Остановка:
+
+```bash
+docker compose down
+```
 
 ---
 
-## 🚀 Локальный запуск (без Docker)
+# 📄 Миграции
 
-### 1. Предварительные требования
-
-- **Go** 1.22+ (`go version`)
-- **PostgreSQL** 16+ (установлен локально)
-- **pgAdmin / DBeaver / psql** (для управления БД)
-
-### 2. Создание базы данных
-
-Выполни в `psql` или DBeaver (под пользователем `postgres`):
-
-```sql
-CREATE DATABASE mydrive;
-CREATE USER mydrive WITH PASSWORD 'mydrive123';
-GRANT ALL PRIVILEGES ON DATABASE mydrive TO mydrive;
-```
-
-### 3. Запуск сервера
+Применить миграции:
 
 ```bash
-# Переход в папку проекта
-cd mydrive
+make migrate-up
+```
 
-# Установка зависимостей
-go mod tidy
+Откатить миграции:
 
-# Создание .env (один раз)
+```bash
+make migrate-down
+```
+
+---
+
+# ⚡ Makefile
+
+Основные команды:
+
+```bash
+make run
+```
+
+Запуск приложения.
+
+```bash
+make build
+```
+
+Сборка приложения.
+
+```bash
+make migrate-up
+```
+
+Применение миграций.
+
+```bash
+make migrate-down
+```
+
+Откат миграций.
+
+```bash
+make docker
+```
+
+Запуск Docker.
+
+---
+
+# 🚀 Быстрый старт
+
+### Клонирование проекта
+
+```bash
+git clone https://github.com/d04392633-cpu/Mini-Cloud-Drive.git
+
+cd Mini-Cloud-Drive
+```
+
+---
+
+### Настройка окружения
+
+```bash
 cp .env.example .env
-# ...отредактируй .env под свои настройки PostgreSQL
+```
 
-# Запуск сервера
+---
+
+### Запуск через Docker
+
+```bash
+docker compose up --build
+```
+
+---
+
+### Локальный запуск
+
+Установить зависимости:
+
+```bash
+go mod tidy
+```
+
+Запустить приложение:
+
+```bash
 go run cmd/api/main.go
 ```
 
-Сервер стартует на `http://localhost:8080`.
+---
 
-### 4. Проверка
+# 🧪 Тестирование через Postman
 
-```bash
-# Health check
-curl http://localhost:8080/health
+Рекомендуемый порядок проверки API:
 
-# Регистрация
-curl -X POST http://localhost:8080/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@mail.com","password":"password123"}'
-
-# Вход (запомни токен)
-curl -X POST http://localhost:8080/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@mail.com","password":"password123"}'
-
-# Загрузка файла (замени <TOKEN> на реальный токен)
-curl -X POST http://localhost:8080/files \
-  -H "Authorization: Bearer <TOKEN>" \
-  -F "file=@README.md"
-
-# Список файлов
-curl http://localhost:8080/files \
-  -H "Authorization: Bearer <TOKEN>"
-```
+1. Register
+2. Login
+3. Скопировать JWT Token
+4. Добавить Authorization Header
+5. Upload File
+6. Get Files
+7. Add Favorite
+8. Get Favorites
+9. Download File
+10. Delete File
 
 ---
 
-## 📊 Пайплайн запроса (как это работает)
+# 📈 Планы развития
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
-│   Клиент    │────▶│    Echo     │────▶│   Middleware    │────▶│   Handler   │
-│ (curl/HTTP) │     │  (роутер)   │     │ (JWT проверка)  │     │  (бизнес)   │
-└─────────────┘     └─────────────┘     └─────────────────┘     └─────────────┘
-                                              │                        │
-                                              │                        │
-                                              ▼                        ▼
-                                         Верификация токена      Работа с БД
-                                         (stateless)            (repository)
-```
-
----
-
-## 👤 Автор
-
-**Daler Samadov** — Junior Go Backend Developer, Душанбе, Таджикистан.
+- MinIO
+- Amazon S3
+- Redis
+- Email Verification
+- Password Recovery
+- Swagger Documentation
+- Unit Tests
+- Logging
+- Monitoring
+- React Frontend
 
 ---
 
-> *"Сначала минимально рабочая версия, улучшения потом."* — наш подход к разработке.
+# 👨‍💻 Автор
+
+**Daler Samadov**
+
+Backend Developer (Go)
+
+GitHub:
+https://github.com/d04392633-cpu
+
+---
+
+⭐ Если проект оказался полезным или интересным — поставьте звезду на GitHub.

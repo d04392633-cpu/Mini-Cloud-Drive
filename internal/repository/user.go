@@ -50,13 +50,14 @@ func (r *UserRepository) CreateUser(full_name, email, passwordHash,role string) 
 
 	err = r.DB.QueryRow(
 		context.Background(),
-		`INSERT INTO users (email, password_hash, created_at, full_name)
-		 VALUES ($1, $2, $3, $4)
+		`INSERT INTO users (email, password_hash, created_at, full_name, role)
+		 VALUES ($1, $2, $3, $4, $5)
 		 RETURNING id`,
 		email,
 		passwordHash,
 		currentTime,
 		full_name,
+		role,
 	).Scan(&id)
 
 	if id == 1 {
