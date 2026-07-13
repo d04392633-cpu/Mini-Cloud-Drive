@@ -1,4 +1,3 @@
-# ---------- Этап сборки ----------
 FROM golang:1.26.1 AS builder
 
 WORKDIR /app
@@ -10,7 +9,7 @@ COPY . .
 
 RUN go build -o main ./cmd/api
 
-# ---------- Финальный образ ----------
+
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
